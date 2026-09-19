@@ -1,0 +1,1101 @@
+You are a senior Ruby on Rails engineer, backend architect, API designer, security engineer, DevOps engineer, and technical writer.
+
+Build a complete, production-quality project called ForgeAPI.
+
+ForgeAPI is a developer-focused API platform built with Ruby on Rails. It should demonstrate professional backend engineering skills including REST API design, authentication, authorization, API keys, rate limiting, background jobs, caching, database design, validation, error handling, logging, testing, documentation, and developer tooling.
+
+Do NOT create a simple CRUD demo.
+
+The final project should feel like a real open-source developer platform that could be shown in a professional GitHub portfolio.
+
+⸻
+
+1. CORE OBJECTIVE
+
+Build ForgeAPI as a centralized API platform where developers can:
+
+* Create an account
+* Authenticate securely
+* Create and manage API projects
+* Generate API keys
+* Create API clients
+* Manage API permissions
+* Make authenticated API requests
+* Track API usage
+* View request logs
+* Configure rate limits
+* Manage webhooks
+* Receive webhook events
+* View API documentation
+* Test API endpoints
+* Manage environments
+* Rotate and revoke credentials
+* Monitor API activity
+
+The architecture should be modular and extensible.
+
+⸻
+
+2. TECHNOLOGY
+
+Use:
+
+* Ruby
+* Ruby on Rails
+* PostgreSQL
+* Redis
+* Sidekiq
+* RSpec
+* Rails API / JSON responses
+* REST architecture
+* Docker
+* GitHub Actions
+
+Use modern stable versions compatible with the project environment.
+
+Prefer Rails conventions over unnecessary complexity.
+
+Use service objects only where they provide meaningful separation of responsibilities.
+
+⸻
+
+3. PROJECT ARCHITECTURE
+
+Organize the project cleanly.
+
+Suggested structure:
+
+app/
+├── controllers/
+│   └── api/
+│       └── v1/
+├── models/
+├── services/
+├── serializers/
+├── jobs/
+├── policies/
+├── validators/
+└── middleware/
+
+config/
+db/
+lib/
+spec/
+docs/
+scripts/
+
+Keep business logic out of controllers whenever practical.
+
+Controllers should remain thin.
+
+⸻
+
+4. API VERSIONING
+
+Implement API versioning.
+
+All public endpoints should begin with:
+
+/api/v1/
+
+Structure controllers accordingly:
+
+Api::V1::UsersController
+Api::V1::ProjectsController
+Api::V1::ApiKeysController
+
+Design the architecture so a future:
+
+/api/v2/
+
+can be introduced without breaking v1.
+
+⸻
+
+5. AUTHENTICATION
+
+Implement secure authentication.
+
+Support:
+
+* Email/password authentication
+* Session/token authentication
+* API key authentication
+* Account logout
+* Credential revocation
+* Password reset
+* Password change
+* Account verification
+
+Passwords must NEVER be stored in plaintext.
+
+Use secure password hashing.
+
+Never expose passwords or secret credentials through API responses.
+
+⸻
+
+6. API KEYS
+
+Create a complete API-key system.
+
+Users should be able to:
+
+* Create API keys
+* Name API keys
+* Assign scopes
+* View key metadata
+* Revoke keys
+* Rotate keys
+* Set expiration dates
+* Track last-used timestamps
+
+Example:
+
+forge_live_xxxxxxxxxxxxxxxxx
+
+The complete secret should only be displayed when the key is initially created.
+
+Store credentials securely.
+
+Do not store raw API secrets unnecessarily.
+
+API key authentication should support:
+
+Authorization: Bearer API_KEY
+
+Also support:
+
+X-API-Key: API_KEY
+
+where appropriate.
+
+⸻
+
+7. API SCOPES
+
+Implement granular permissions.
+
+Example scopes:
+
+read:projects
+write:projects
+read:users
+write:users
+read:webhooks
+write:webhooks
+read:analytics
+admin
+
+API keys should be assignable to specific scopes.
+
+Requests must be rejected when the key lacks the required scope.
+
+Return appropriate HTTP status codes.
+
+⸻
+
+8. PROJECTS
+
+Users can create API projects.
+
+Each project should contain:
+
+* Name
+* Description
+* Slug
+* Owner
+* Status
+* Environment
+* Created timestamp
+* Updated timestamp
+
+Support:
+
+POST /api/v1/projects
+
+GET /api/v1/projects
+
+GET /api/v1/projects/:id
+
+PATCH /api/v1/projects/:id
+
+DELETE /api/v1/projects/:id
+
+Users must only be able to access projects they are authorized to access.
+
+⸻
+
+9. ENVIRONMENTS
+
+Support separate environments:
+
+* Development
+* Staging
+* Production
+
+Each project can have multiple environments.
+
+Each environment can have:
+
+* Environment name
+* Public identifier
+* API configuration
+* Rate limits
+* Webhook configuration
+* API keys
+
+Production credentials must be clearly separated from development credentials.
+
+⸻
+
+10. RATE LIMITING
+
+Implement API rate limiting.
+
+Use Redis for distributed rate limiting.
+
+Example:
+
+100 requests/minute
+
+Return:
+
+HTTP 429 Too Many Requests
+
+Include headers such as:
+
+X-RateLimit-Limit
+X-RateLimit-Remaining
+X-RateLimit-Reset
+
+Make rate limits configurable.
+
+Rate limits should support:
+
+* User
+* API key
+* IP address
+* Project
+
+Avoid implementing rate limiting using only in-memory variables.
+
+⸻
+
+11. REQUEST LOGGING
+
+Track API requests.
+
+Each request log should include:
+
+* Request ID
+* API key
+* User
+* Project
+* Endpoint
+* HTTP method
+* Status code
+* Response time
+* IP address
+* User agent
+* Timestamp
+
+Do NOT store sensitive information such as:
+
+* Passwords
+* API secrets
+* Authorization headers
+* Private tokens
+
+unless explicitly sanitized.
+
+Provide endpoints for retrieving request history.
+
+⸻
+
+12. REQUEST IDS
+
+Every API request should receive a unique request ID.
+
+Example:
+
+X-Request-ID: req_01HXXXXXXXXXXXX
+
+Return the request ID in the response headers.
+
+Include the request ID in logs and error responses.
+
+This should make debugging much easier.
+
+⸻
+
+13. STANDARD RESPONSE FORMAT
+
+Create a consistent JSON format.
+
+Successful response:
+
+{
+“data”: {},
+“meta”: {},
+“request_id”: “req_…”
+}
+
+Collection response:
+
+{
+“data”: [],
+“meta”: {
+“page”: 1,
+“per_page”: 25,
+“total”: 100
+},
+“request_id”: “req_…”
+}
+
+Error response:
+
+{
+“error”: {
+“code”: “invalid_request”,
+“message”: “The request could not be processed.”,
+“details”: []
+},
+“request_id”: “req_…”
+}
+
+Do not expose stack traces or internal exceptions in production responses.
+
+⸻
+
+14. ERROR HANDLING
+
+Implement centralized error handling.
+
+Support errors such as:
+
+400 Bad Request
+401 Unauthorized
+403 Forbidden
+404 Not Found
+409 Conflict
+422 Unprocessable Entity
+429 Too Many Requests
+500 Internal Server Error
+
+Create meaningful machine-readable error codes.
+
+Example:
+
+invalid_api_key
+insufficient_scope
+resource_not_found
+rate_limit_exceeded
+validation_failed
+
+⸻
+
+15. PAGINATION
+
+Implement pagination for collection endpoints.
+
+Support:
+
+?page=1
+&per_page=25
+
+Include metadata:
+
+page
+per_page
+total
+total_pages
+
+Set reasonable maximum page sizes.
+
+Do not allow users to request unlimited records.
+
+⸻
+
+16. FILTERING
+
+Support filtering where appropriate.
+
+Example:
+
+GET /api/v1/projects?status=active
+
+Support:
+
+* Filtering
+* Sorting
+* Pagination
+* Search
+
+Avoid allowing arbitrary database fields to be queried.
+
+Whitelist allowed filters and sorting parameters.
+
+⸻
+
+17. WEBHOOKS
+
+Implement a complete webhook system.
+
+Users should be able to:
+
+* Create webhook endpoints
+* Update endpoints
+* Delete endpoints
+* Enable/disable endpoints
+* Select subscribed events
+* View delivery attempts
+* Retry failed deliveries
+
+Example events:
+
+project.created
+project.updated
+project.deleted
+api_key.created
+api_key.revoked
+user.created
+
+Webhook payloads should contain:
+
+* Event ID
+* Event type
+* Timestamp
+* API version
+* Data
+
+⸻
+
+18. WEBHOOK SECURITY
+
+Sign webhook requests.
+
+Use an HMAC signature.
+
+Example header:
+
+X-Forge-Signature
+
+Provide documentation explaining how developers verify signatures.
+
+Never expose webhook secrets after initial creation.
+
+⸻
+
+19. WEBHOOK RETRIES
+
+Webhook delivery should happen asynchronously.
+
+Use Sidekiq.
+
+Implement retry logic.
+
+Example:
+
+Attempt 1
+Attempt 2
+Attempt 3
+Attempt 4
+Attempt 5
+
+Use exponential backoff.
+
+Store delivery results.
+
+Track:
+
+* HTTP status
+* Response time
+* Attempt number
+* Timestamp
+* Success/failure
+* Error message
+
+⸻
+
+20. BACKGROUND JOBS
+
+Use Sidekiq for tasks such as:
+
+* Webhook delivery
+* Analytics aggregation
+* Log cleanup
+* Email delivery
+* Data exports
+* Scheduled maintenance
+
+Jobs should be idempotent where possible.
+
+⸻
+
+21. CACHING
+
+Use Redis/Rails caching where appropriate.
+
+Cache expensive read operations.
+
+Do not cache sensitive user-specific data incorrectly.
+
+Implement appropriate cache invalidation.
+
+⸻
+
+22. ANALYTICS
+
+Create API usage analytics.
+
+Track:
+
+* Total requests
+* Successful requests
+* Failed requests
+* 4xx requests
+* 5xx requests
+* Average response time
+* Requests by endpoint
+* Requests by API key
+* Requests by project
+* Requests over time
+
+Provide endpoints for retrieving analytics.
+
+Example:
+
+GET /api/v1/analytics/usage
+
+⸻
+
+23. API DOCUMENTATION
+
+Create professional API documentation.
+
+Use OpenAPI.
+
+Provide:
+
+* Endpoint descriptions
+* Request parameters
+* Authentication
+* Request examples
+* Response examples
+* Error examples
+* HTTP status codes
+
+Generate an OpenAPI specification.
+
+Create:
+
+docs/openapi.yaml
+
+The documentation should be usable by another developer without reading the source code.
+
+⸻
+
+24. API EXPLORER
+
+Create an API testing interface if the application includes a frontend.
+
+Users should be able to:
+
+* Select an endpoint
+* Select HTTP method
+* Add parameters
+* Add request body
+* Authenticate
+* Send request
+* View response
+* View headers
+* View status code
+* View response time
+
+Make it resemble a lightweight developer API console.
+
+⸻
+
+25. DATABASE DESIGN
+
+Use PostgreSQL.
+
+Create appropriate relationships.
+
+Potential models:
+
+User
+Project
+Environment
+ApiKey
+ApiClient
+ApiRequest
+Webhook
+WebhookEvent
+WebhookDelivery
+UsageRecord
+
+Use:
+
+* Foreign keys
+* Database indexes
+* Unique constraints
+* NOT NULL constraints
+* Proper validations
+
+Optimize frequently queried fields.
+
+⸻
+
+26. SECURITY
+
+Treat security as a core requirement.
+
+Implement:
+
+* Strong password hashing
+* Authorization checks
+* API key rotation
+* API key revocation
+* Scope validation
+* Rate limiting
+* Input validation
+* SQL injection protection
+* CSRF protection where applicable
+* Secure headers
+* Sanitized logging
+* Secure webhook signatures
+* Secret management
+* Production-safe error handling
+
+Never commit secrets.
+
+Provide:
+
+.env.example
+
+instead of committing:
+
+.env
+
+⸻
+
+27. SECURITY TESTING
+
+Write tests covering:
+
+* Invalid API keys
+* Expired API keys
+* Revoked API keys
+* Missing scopes
+* Unauthorized resources
+* Rate-limit enforcement
+* Invalid webhook signatures
+* Authentication failures
+* Permission escalation attempts
+
+⸻
+
+28. TESTING
+
+Use RSpec.
+
+Create:
+
+* Model specs
+* Request specs
+* Service specs
+* Job specs
+* Policy specs
+* Authentication specs
+* Authorization specs
+
+Important functionality should have automated tests.
+
+Target meaningful coverage rather than artificially maximizing coverage percentage.
+
+⸻
+
+29. SEEDS
+
+Create realistic development seed data.
+
+Include:
+
+* Demo users
+* Demo projects
+* Demo API keys
+* Demo webhooks
+* Demo request logs
+* Demo analytics
+
+Never generate real secrets in seed files.
+
+Use clearly labeled development credentials.
+
+⸻
+
+30. DOCKER
+
+Provide Docker support.
+
+Include:
+
+Dockerfile
+docker-compose.yml
+
+The development environment should be capable of running:
+
+Rails
+PostgreSQL
+Redis
+Sidekiq
+
+with minimal setup.
+
+⸻
+
+31. CI/CD
+
+Create GitHub Actions.
+
+At minimum:
+
+.github/workflows/ci.yml
+
+The CI pipeline should:
+
+1. Install Ruby
+2. Install dependencies
+3. Prepare PostgreSQL
+4. Prepare Redis if needed
+5. Run migrations
+6. Run tests
+7. Run linting
+8. Report failures
+
+Do not allow secrets to be committed.
+
+⸻
+
+32. CODE QUALITY
+
+Use professional Ruby/Rails conventions.
+
+Include:
+
+* RuboCop
+* Brakeman
+* RSpec
+
+Run static analysis.
+
+Fix warnings rather than simply disabling them.
+
+Keep methods small and readable.
+
+Use descriptive naming.
+
+Avoid unnecessary metaprogramming.
+
+⸻
+
+33. CLI
+
+Create a ForgeAPI CLI if practical.
+
+Example commands:
+
+forgeapi auth
+forgeapi projects list
+forgeapi projects create
+forgeapi keys create
+forgeapi keys revoke
+forgeapi logs
+forgeapi webhooks list
+
+The CLI should communicate with the ForgeAPI REST API.
+
+Keep CLI functionality modular so additional commands can be added later.
+
+⸻
+
+34. ADMIN FUNCTIONALITY
+
+Create an administrative layer.
+
+Administrators should be able to:
+
+* View users
+* View projects
+* View API activity
+* Revoke compromised keys
+* Disable accounts
+* Review webhook failures
+* View system statistics
+
+Protect administrative endpoints with explicit authorization.
+
+⸻
+
+35. FRONTEND
+
+If a frontend is included, build a clean developer dashboard.
+
+Pages should include:
+
+Dashboard
+Projects
+Project Details
+API Keys
+Request Logs
+Analytics
+Webhooks
+API Documentation
+Settings
+Account
+
+Prioritize functionality and usability over visual effects.
+
+The interface should look like a professional developer SaaS platform.
+
+⸻
+
+36. ACCESSIBILITY
+
+Follow reasonable accessibility practices.
+
+Include:
+
+* Semantic HTML
+* Keyboard navigation
+* Accessible forms
+* Proper labels
+* Error messages
+* Appropriate contrast
+* Responsive layouts
+
+⸻
+
+37. README
+
+Create a professional README containing:
+
+* Project overview
+* Features
+* Screenshots if available
+* Architecture
+* Tech stack
+* Requirements
+* Installation
+* Environment variables
+* Database setup
+* Running the application
+* Running tests
+* API authentication
+* API examples
+* Webhooks
+* Rate limits
+* Docker instructions
+* Deployment
+* Security
+* Contributing
+* License
+* Roadmap
+
+Make the README specific to the actual implementation.
+
+Do NOT claim functionality that does not exist.
+
+⸻
+
+38. ENVIRONMENT VARIABLES
+
+Create:
+
+.env.example
+
+Document variables such as:
+
+DATABASE_URL
+REDIS_URL
+RAILS_MASTER_KEY
+FORGE_API_SECRET
+WEBHOOK_SECRET
+
+Never place actual credentials in the repository.
+
+⸻
+
+39. API EXAMPLES
+
+Provide examples such as:
+
+Create project:
+
+POST /api/v1/projects
+
+Request:
+
+{
+“name”: “My Application”,
+“description”: “Example project”
+}
+
+Response:
+
+{
+“data”: {
+“id”: “…”,
+“name”: “My Application”
+},
+“request_id”: “req_…”
+}
+
+Also provide curl examples.
+
+⸻
+
+40. PERFORMANCE
+
+Design for reasonable scalability.
+
+Use:
+
+* Database indexes
+* Pagination
+* Redis
+* Background jobs
+* Efficient queries
+* Query preloading
+* Caching where appropriate
+
+Avoid N+1 queries.
+
+Use Bullet or equivalent tooling during development if useful.
+
+⸻
+
+41. OBSERVABILITY
+
+Implement structured logging where practical.
+
+Track:
+
+* Request ID
+* HTTP method
+* Endpoint
+* Response status
+* Duration
+* User/API key context where safe
+
+Make logs useful for debugging production issues.
+
+⸻
+
+42. DOCUMENTATION
+
+Create a docs directory.
+
+Suggested structure:
+
+docs/
+├── architecture.md
+├── authentication.md
+├── api-keys.md
+├── rate-limiting.md
+├── webhooks.md
+├── errors.md
+├── deployment.md
+└── openapi.yaml
+
+Documentation should explain both how the system works and how developers use it.
+
+⸻
+
+43. DEVELOPMENT WORKFLOW
+
+Before writing code:
+
+1. Inspect the existing project.
+2. Determine whether Rails is already configured.
+3. Preserve useful existing work.
+4. Do not unnecessarily rewrite working code.
+5. Establish the architecture.
+6. Build incrementally.
+7. Run tests after major features.
+8. Fix errors immediately.
+9. Run security checks.
+10. Update documentation.
+
+⸻
+
+44. IMPORTANT AI CODING RULES
+
+Do not generate fake implementations.
+
+Do not create buttons that do nothing.
+
+Do not create endpoints that return hardcoded fake data unless explicitly marked as development examples.
+
+Do not claim a feature is implemented when it is only a placeholder.
+
+Every major UI feature must connect to real backend functionality.
+
+Every important backend feature must have tests.
+
+Use real database persistence.
+
+Use real authentication.
+
+Use real authorization.
+
+Use real API key validation.
+
+Use real Redis rate limiting.
+
+Use real Sidekiq jobs.
+
+Use real webhook delivery.
+
+⸻
+
+45. FINAL QUALITY CHECK
+
+Before considering ForgeAPI complete, verify:
+
+* Application boots successfully
+* Database migrations work
+* Database seeds work
+* Authentication works
+* Authorization works
+* API keys work
+* API scopes work
+* Rate limiting works
+* Request IDs work
+* Request logging works
+* Pagination works
+* Filtering works
+* Webhooks work
+* Webhook signatures work
+* Webhook retries work
+* Sidekiq works
+* Redis works
+* Analytics work
+* OpenAPI documentation works
+* RSpec tests pass
+* RuboCop passes
+* Brakeman passes
+* Docker works
+* GitHub Actions works
+* No secrets are committed
+* README matches the actual implementation
+
+After implementation, perform a complete end-to-end test of the application.
+
+Fix all errors you encounter.
+
+Do not stop after generating the initial files.
+
+The final result should be a coherent, functional, documented, tested Ruby on Rails API platform that demonstrates professional backend engineering rather than a tutorial-level CRUD application.
